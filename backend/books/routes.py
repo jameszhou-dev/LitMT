@@ -167,37 +167,47 @@ async def view_book_source(book_id: str, request: Request):
 @router.get("/books", response_model=List[BookOut])
 async def list_books(limit: int = 50, request: Request = None):
     db = request.app.state.db
-    cursor = db.books.find().limit(limit)
-    items = []
-    async for doc in cursor:
-        # Serialize book document
-        doc['id'] = str(doc['_id'])
-        doc.pop('_id', None)
-        # fetch translations for this book
-        trans_cursor = db.translations.find({'book_id': ObjectId(doc['id'])})
-        translations = []
-        async for tdoc in trans_cursor:
+    items: List[BookOut] = []
+    try:
+        cursor = db.books.find().limit(limit)
+        async for doc in cursor:
+            # Serialize book document
+            doc['id'] = str(doc['_id'])
+            doc.pop('_id', None)
+            # fetch translations for this book
+            translations = []
             try:
-                # Build a fully serialized translation object for the response model
-                t_out = {
-                    'id': str(tdoc.get('_id')),
-                    'book_id': str(tdoc.get('book_id')) if tdoc.get('book_id') is not None else '',
-                    'language': tdoc.get('language') or '',
-                    'filename': tdoc.get('filename') or '',
-                    'text': tdoc.get('text'),
-                    'file_id': (str(tdoc.get('file_id')) if tdoc.get('file_id') is not None else None),
-                }
-                translations.append(TranslatedBookOut(**t_out))
+                trans_cursor = db.translations.find({'book_id': ObjectId(doc['id'])})
+                async for tdoc in trans_cursor:
+                    try:
+                        # Build a fully serialized translation object for the response model
+                        t_out = {
+                            'id': str(tdoc.get('_id')),
+                            'book_id': str(tdoc.get('book_id')) if tdoc.get('book_id') is not None else '',
+                            'language': tdoc.get('language') or '',
+                            'filename': tdoc.get('filename') or '',
+                            'text': tdoc.get('text'),
+                            'file_id': (str(tdoc.get('file_id')) if tdoc.get('file_id') is not None else None),
+                        }
+                        translations.append(TranslatedBookOut(**t_out))
+                    except Exception as e:
+                        # Log and skip malformed translation records instead of failing the entire request
+                        print(f"⚠️  Skipping malformed translation {_safe_id(tdoc)}: {e}")
+                        continue
             except Exception as e:
-                # Log and skip malformed translation records instead of failing the entire request
-                print(f"⚠️  Skipping malformed translation {_safe_id(tdoc)}: {e}")
+                print(f"⚠️  Failed to read translations for book {doc.get('id')}: {e}")
+
+            try:
+                items.append(BookOut(**doc, translated_books=translations))
+            except Exception as e:
+                print(f"⚠️  Skipping malformed book {doc.get('id')}: {e}")
                 continue
-        try:
-            items.append(BookOut(**doc, translated_books=translations))
-        except Exception as e:
-            print(f"⚠️  Skipping malformed book {doc.get('id')}: {e}")
-            continue
-    return items
+        return items
+    except Exception as e:
+        # Ensure CORS headers are still applied by returning a handled error
+        print(f"❌ Database error while listing books: {e}")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="Database unavailable")
 
 
 def _safe_id(d: dict):

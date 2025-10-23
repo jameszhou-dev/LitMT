@@ -48,3 +48,9 @@ app.add_middleware(
 app.include_router(books_router, prefix="/api")
 
 
+# Simple health check for debugging
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
