@@ -1,6 +1,8 @@
+
 /backend/.env
-/backend/__pycache__
-/backend/benb
-/litmt/.next
-/litmt/node_modules
+/backend/__pycache__/
+/backend/venv/
+
+/litmt/.next/
+/litmt/node_modules/
 /litmt/.env

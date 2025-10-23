@@ -29,8 +29,9 @@ async def create_book(book: BookIn, request: Request):
 
     created_translations = []
     for t in translations:
+        # Always store DB reference types as ObjectId
         tdoc = {
-            'book_id': book_id,
+            'book_id': ObjectId(str(book_id)),
             'language': t.get('language'),
             'filename': t.get('filename'),
             'text': t.get('text'),
@@ -38,7 +39,16 @@ async def create_book(book: BookIn, request: Request):
         tres = await db.translations.insert_one(tdoc)
         if tres.acknowledged:
             print(f"✅ Translation created: {t.get('language')} (ID: {tres.inserted_id})")
-            created_translations.append(TranslatedBookOut(id=str(tres.inserted_id), book_id=str(book_id), **tdoc))
+            # Build a safe, serialized payload for the response model
+            t_out = {
+                'id': str(tres.inserted_id),
+                'book_id': str(book_id),
+                'language': tdoc.get('language') or '',
+                'filename': tdoc.get('filename') or '',
+                'text': tdoc.get('text'),
+                'file_id': None,
+            }
+            created_translations.append(TranslatedBookOut(**t_out))
 
     return BookOut(id=str(book_id), translated_books=created_translations, **doc)
 
@@ -160,18 +170,38 @@ async def list_books(limit: int = 50, request: Request = None):
     cursor = db.books.find().limit(limit)
     items = []
     async for doc in cursor:
+        # Serialize book document
         doc['id'] = str(doc['_id'])
         doc.pop('_id', None)
         # fetch translations for this book
         trans_cursor = db.translations.find({'book_id': ObjectId(doc['id'])})
         translations = []
         async for tdoc in trans_cursor:
-            tdoc['id'] = str(tdoc['_id'])
-            tdoc.pop('_id', None)
-            tdoc['book_id'] = str(tdoc['book_id'])
-            # Convert file_id to string if it exists and is an ObjectId
-            if tdoc.get('file_id'):
-                tdoc['file_id'] = str(tdoc['file_id'])
-            translations.append(TranslatedBookOut(**tdoc))
-        items.append(BookOut(**doc, translated_books=translations))
+            try:
+                # Build a fully serialized translation object for the response model
+                t_out = {
+                    'id': str(tdoc.get('_id')),
+                    'book_id': str(tdoc.get('book_id')) if tdoc.get('book_id') is not None else '',
+                    'language': tdoc.get('language') or '',
+                    'filename': tdoc.get('filename') or '',
+                    'text': tdoc.get('text'),
+                    'file_id': (str(tdoc.get('file_id')) if tdoc.get('file_id') is not None else None),
+                }
+                translations.append(TranslatedBookOut(**t_out))
+            except Exception as e:
+                # Log and skip malformed translation records instead of failing the entire request
+                print(f"⚠️  Skipping malformed translation {_safe_id(tdoc)}: {e}")
+                continue
+        try:
+            items.append(BookOut(**doc, translated_books=translations))
+        except Exception as e:
+            print(f"⚠️  Skipping malformed book {doc.get('id')}: {e}")
+            continue
     return items
+
+
+def _safe_id(d: dict):
+    try:
+        return str(d.get('_id'))
+    except Exception:
+        return "<unknown>"
