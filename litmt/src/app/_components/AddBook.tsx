@@ -14,14 +14,15 @@ export default function AddBook() {
 	const [title, setTitle] = useState("");
 	const [author, setAuthor] = useState("");
 	const [year, setYear] = useState("");
+	const [originalLanguage, setOriginalLanguage] = useState("");
 	const [description, setDescription] = useState("");
 	const [source, setSource] = useState("");
 	const [translations, setTranslations] = useState([
-		{ language: "", filename: "", file: null },
+		{ language: "", filename: "", file: null, translated_by: "" },
 	]);
 	const [status, setStatus] = useState("");
 
-	const addTranslationRow = () => setTranslations([...translations, { language: "", filename: "", file: null }]);
+	const addTranslationRow = () => setTranslations([...translations, { language: "", filename: "", file: null, translated_by: "" }]);
 	const removeTranslationRow = (i) => setTranslations(translations.filter((_, idx) => idx !== i));
 	const updateTranslation = (i, field, value) => {
 		const copy = [...translations];
@@ -37,6 +38,7 @@ export default function AddBook() {
 			author,
 			year: year ? parseInt(year, 10) : undefined,
 			description,
+			original_language: originalLanguage || undefined,
 			source,
 		};
 
@@ -59,6 +61,9 @@ export default function AddBook() {
 			const form = new FormData();
 			form.append("language", t.language || "");
 			form.append("file", t.file, t.file.name || t.filename || "translation.txt");
+			if (t.translated_by) {
+				form.append("translated_by", t.translated_by);
+			}
 			const tRes = await fetch(apiUrl(`/api/books/${bookId}/translations`), {
 				method: "POST",
 				body: form,
@@ -74,163 +79,158 @@ export default function AddBook() {
 		setAuthor("");
 		setYear("");
 		setDescription("");
+		setOriginalLanguage("");
 		setSource("");
-		setTranslations([{ language: "", filename: "", file: null }]);
+		setTranslations([{ language: "", filename: "", file: null, translated_by: "" }]);
 	}
 
 	return (
-		<main style={{ padding: 24, maxWidth: 800, margin: "0 auto" }}>
-			<h1>Add Book</h1>
-			<p>Create a new book and upload translations</p>
-      
-			<form onSubmit={handleSubmit}>
-				<fieldset style={{ marginBottom: 20, border: "1px solid #ccc", padding: 16, borderRadius: 8 }}>
-					<legend style={{ fontSize: 16, fontWeight: "bold" }}>Book Information</legend>
-          
-					<div style={{ marginBottom: 12 }}>
-						<label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
-							Title <span style={{ color: "red" }}>*</span>
-						</label>
-						<input
-							type="text"
-							value={title}
-							onChange={(e) => setTitle(e.target.value)}
-							required
-							placeholder="Enter book title"
-							style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ddd" }}
-						/>
-					</div>
+		<div className="bg-white border border-gray-200 rounded-xl p-6">
+			<p className="text-gray-600 mb-6">Create a new book and upload translations</p>
 
-					<div style={{ marginBottom: 12 }}>
-						<label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>Author</label>
-						<input
-							type="text"
-							value={author}
-							onChange={(e) => setAuthor(e.target.value)}
-							placeholder="Enter author name"
-							style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ddd" }}
-						/>
-					</div>
-
-					<div style={{ marginBottom: 12 }}>
-						<label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>Year</label>
-						<input
-							type="number"
-							value={year}
-							onChange={(e) => setYear(e.target.value)}
-							placeholder="e.g. 2024"
-							style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ddd" }}
-						/>
-					</div>
-
-					<div style={{ marginBottom: 12 }}>
-						<label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>Description</label>
-						<textarea
-							value={description}
-							onChange={(e) => setDescription(e.target.value)}
-							placeholder="Enter book description"
-							rows={3}
-							style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ddd", fontFamily: "inherit" }}
-						/>
-					</div>
-
-					<div style={{ marginBottom: 12 }}>
-						<label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>Original Source Text</label>
-						<textarea
-							value={source}
-							onChange={(e) => setSource(e.target.value)}
-							placeholder="Paste the original text or provide a reference"
-							rows={4}
-							style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ddd", fontFamily: "monospace" }}
-						/>
-					</div>
-				</fieldset>
-
-				<fieldset style={{ marginBottom: 20, border: "1px solid #ccc", padding: 16, borderRadius: 8 }}>
-					<legend style={{ fontSize: 16, fontWeight: "bold" }}>Translations</legend>
-
-					{translations.map((t, i) => (
-						<div
-							key={i}
-							style={{
-								border: "1px solid #ddd",
-								padding: 12,
-								marginBottom: 12,
-								borderRadius: 4,
-								backgroundColor: "#f9f9f9",
-							}}
-						>
-							<div style={{ marginBottom: 12 }}>
-								<label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>Language</label>
-								<input
-									type="text"
-									value={t.language}
-									onChange={(e) => updateTranslation(i, "language", e.target.value)}
-									placeholder="e.g. French, Spanish, German"
-									style={{ width: "100%", padding: 8, borderRadius: 4, border: "1px solid #ddd" }}
-								/>
-							</div>
-
-							<div style={{ marginBottom: 12 }}>
-								<label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>Upload Translation File (.txt)</label>
-								<input
-									type="file"
-									accept=".txt"
-									onChange={(e) => updateTranslation(i, "file", e.target.files[0])}
-									style={{ padding: 8 }}
-								/>
-								{t.file && <p style={{ fontSize: 12, color: "#666", marginTop: 4 }}>✓ File selected: {t.file.name}</p>}
-							</div>
-
-							{translations.length > 1 && (
-								<button
-									type="button"
-									onClick={() => removeTranslationRow(i)}
-									style={{
-										padding: "6px 12px",
-										backgroundColor: "#ff6b6b",
-										color: "white",
-										border: "none",
-										borderRadius: 4,
-										cursor: "pointer",
-									}}
-								>
-									Remove Translation
-								</button>
-							)}
+			<form onSubmit={handleSubmit} className="space-y-8">
+				{/* Book Information */}
+				<div>
+					<h2 className="text-lg font-semibold text-gray-900 mb-4">Book Information</h2>
+					<div className="grid md:grid-cols-2 gap-6">
+						<div className="md:col-span-2">
+							<label className="block text-sm font-medium text-gray-700 mb-2">
+								Title <span className="text-red-600">*</span>
+							</label>
+							<input
+								type="text"
+								value={title}
+								onChange={(e) => setTitle(e.target.value)}
+								required
+								placeholder="Enter book title"
+								className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+							/>
 						</div>
-					))}
+
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">Author</label>
+							<input
+								type="text"
+								value={author}
+								onChange={(e) => setAuthor(e.target.value)}
+								placeholder="Enter author name"
+								className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+							/>
+						</div>
+
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+							<input
+								type="number"
+								value={year}
+								onChange={(e) => setYear(e.target.value)}
+								placeholder="e.g. 2024"
+								className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+							/>
+						</div>
+
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">Original Language</label>
+							<input
+								type="text"
+								value={originalLanguage}
+								onChange={(e) => setOriginalLanguage(e.target.value)}
+								placeholder="e.g. English, Chinese, Spanish"
+								className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+							/>
+						</div>
+
+						<div className="md:col-span-2">
+							<label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+							<textarea
+								value={description}
+								onChange={(e) => setDescription(e.target.value)}
+								placeholder="Enter book description"
+								rows={3}
+								className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+							/>
+						</div>
+
+						<div className="md:col-span-2">
+							<label className="block text-sm font-medium text-gray-700 mb-2">Original Source Text</label>
+							<textarea
+								value={source}
+								onChange={(e) => setSource(e.target.value)}
+								placeholder="Paste the original text or provide a reference"
+								rows={4}
+								className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 font-mono"
+							/>
+						</div>
+					</div>
+				</div>
+
+				{/* Translations */}
+				<div>
+					<h2 className="text-lg font-semibold text-gray-900 mb-4">Translations</h2>
+					<div className="space-y-4">
+						{translations.map((t, i) => (
+							<div key={i} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+								<div className="grid md:grid-cols-2 gap-4">
+									<div>
+										<label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+										<input
+											type="text"
+											value={t.language}
+											onChange={(e) => updateTranslation(i, "language", e.target.value)}
+											placeholder="e.g. French, Spanish, German"
+											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+										/>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-gray-700 mb-2">Translated by (model)</label>
+										<input
+											type="text"
+											value={t.translated_by}
+											onChange={(e) => updateTranslation(i, "translated_by", e.target.value)}
+											placeholder="e.g. gpt-4o, nllb-200, custom"
+											className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+										/>
+									</div>
+
+									<div className="md:col-span-2">
+										<label className="block text-sm font-medium text-gray-700 mb-2">Upload Translation File (.txt)</label>
+										<input
+											type="file"
+											accept=".txt"
+											onChange={(e) => updateTranslation(i, "file", e.target.files[0])}
+											className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+										/>
+										{t.file && <p className="text-xs text-gray-600 mt-2">✓ File selected: {t.file.name}</p>}
+									</div>
+								</div>
+
+								{translations.length > 1 && (
+									<button
+										type="button"
+										onClick={() => removeTranslationRow(i)}
+										className="mt-3 px-3 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
+									>
+										Remove Translation
+									</button>
+								)}
+							</div>
+						))}
+					</div>
 
 					<button
 						type="button"
 						onClick={addTranslationRow}
-						style={{
-							padding: "8px 16px",
-							backgroundColor: "#4CAF50",
-							color: "white",
-							border: "none",
-							borderRadius: 4,
-							cursor: "pointer",
-							marginBottom: 12,
-						}}
+						className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
 					>
 						+ Add Translation
 					</button>
-				</fieldset>
+				</div>
 
-				<div style={{ marginBottom: 16 }}>
+				<div>
 					<button
 						type="submit"
-						style={{
-							padding: "12px 24px",
-							backgroundColor: "#2196F3",
-							color: "white",
-							border: "none",
-							borderRadius: 4,
-							cursor: "pointer",
-							fontSize: 16,
-							fontWeight: "bold",
-						}}
+						className="px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700"
 					>
 						Create Book
 					</button>
@@ -239,18 +239,15 @@ export default function AddBook() {
 
 			{status && (
 				<div
-					style={{
-						marginTop: 16,
-						padding: 12,
-						borderRadius: 4,
-						backgroundColor: status.includes("❌") || status.includes("Failed") ? "#ffebee" : "#e8f5e9",
-						color: status.includes("❌") || status.includes("Failed") ? "#c62828" : "#2e7d32",
-						border: `1px solid ${status.includes("❌") || status.includes("Failed") ? "#ef5350" : "#4caf50"}`,
-					}}
+					className={`mt-4 p-3 rounded-lg border ${
+						status.includes("❌") || status.includes("Failed")
+							? "bg-red-50 text-red-700 border-red-200"
+							: "bg-green-50 text-green-700 border-green-200"
+					}`}
 				>
 					{status}
 				</div>
 			)}
-		</main>
+		</div>
 	);
 }

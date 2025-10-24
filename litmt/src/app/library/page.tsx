@@ -7,7 +7,7 @@ import Header from "../_components/Header";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
 
 interface Book {
-  _id: string;
+  id: string;
   title: string;
   author: string;
   description?: string;
@@ -57,7 +57,7 @@ export default function Library() {
   });
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-white">
       <Header />
 
       {/* Top band gradient */}
@@ -65,12 +65,9 @@ export default function Library() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-6">
             <h1 className="text-5xl font-serif font-bold text-gray-900 mb-4">
-              Book Library
+              Library
             </h1>
             <div className="w-16 h-1 bg-indigo-600 mb-4"></div>
-            <p className="text-lg text-gray-700">
-              Explore our collection of translated literary works from around the world
-            </p>
           </div>
         </div>
       </section>
@@ -132,8 +129,8 @@ export default function Library() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredBooks.map((book) => (
-                  <div key={book._id}>
-                    <Link href={`/book/${book._id}`}>
+                  <div key={book.id}>
+                    <Link href={`/book/${book.id}`}>
                       <div className="bg-white border border-indigo-200 rounded-xl p-6 hover:shadow-lg hover:border-indigo-600 transition cursor-pointer h-full flex flex-col">
                       {/* Cover Image Placeholder */}
                       <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 rounded-lg mb-4 flex items-center justify-center">

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request
 from fastapi.responses import StreamingResponse
 import io
@@ -35,6 +35,7 @@ async def create_book(book: BookIn, request: Request):
             'language': t.get('language'),
             'filename': t.get('filename'),
             'text': t.get('text'),
+            'translated_by': t.get('translated_by'),
         }
         tres = await db.translations.insert_one(tdoc)
         if tres.acknowledged:
@@ -47,6 +48,7 @@ async def create_book(book: BookIn, request: Request):
                 'filename': tdoc.get('filename') or '',
                 'text': tdoc.get('text'),
                 'file_id': None,
+                'translated_by': tdoc.get('translated_by') or None,
             }
             created_translations.append(TranslatedBookOut(**t_out))
 
@@ -54,7 +56,13 @@ async def create_book(book: BookIn, request: Request):
 
 
 @router.post("/books/{book_id}/translations", response_model=TranslatedBookOut)
-async def upload_translation(book_id: str, language: str = Form(...), file: UploadFile = File(...), request: Request = None):
+async def upload_translation(
+    book_id: str,
+    language: str = Form(...),
+    file: UploadFile = File(...),
+    translated_by: Optional[str] = Form(None),
+    request: Request = None,
+):
     db = request.app.state.db
     try:
         b = await db.books.find_one({"_id": ObjectId(book_id)})
@@ -72,12 +80,20 @@ async def upload_translation(book_id: str, language: str = Form(...), file: Uplo
         'language': language,
         'filename': file.filename,
         'file_id': file_id,
+        'translated_by': translated_by,
     }
     tres = await db.translations.insert_one(tdoc)
     if not tres.acknowledged:
         raise HTTPException(status_code=500, detail="Failed to create translation record")
 
-    return TranslatedBookOut(id=str(tres.inserted_id), book_id=book_id, language=language, filename=file.filename, file_id=str(file_id))
+    return TranslatedBookOut(
+        id=str(tres.inserted_id),
+        book_id=book_id,
+        language=language,
+        filename=file.filename,
+        file_id=str(file_id),
+        translated_by=translated_by,
+    )
 
 
 @router.get("/translations/{translation_id}/file")
@@ -188,6 +204,7 @@ async def list_books(limit: int = 50, request: Request = None):
                             'filename': tdoc.get('filename') or '',
                             'text': tdoc.get('text'),
                             'file_id': (str(tdoc.get('file_id')) if tdoc.get('file_id') is not None else None),
+                            'translated_by': tdoc.get('translated_by'),
                         }
                         translations.append(TranslatedBookOut(**t_out))
                     except Exception as e:
