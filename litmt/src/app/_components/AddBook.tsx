@@ -9,6 +9,8 @@ const rawBackend = envBackend && !isPlaceholder ? envBackend : "http://127.0.0.1
 const withProtocol = /^https?:\/\//i.test(rawBackend) ? rawBackend : `http://${rawBackend}`;
 const BACKEND_URL = withProtocol.replace(/\/$/, "");
 const apiUrl = (path: string) => `${BACKEND_URL}${path.startsWith("/") ? path : `/${path}`}`;
+// Prefer JWT from login; fallback to a dev-only public admin key if set
+const PUBLIC_ADMIN_KEY = (process.env.NEXT_PUBLIC_ADMIN_API_KEY || "").trim();
 
 export default function AddBook() {
 	const [title, setTitle] = useState("");
@@ -42,9 +44,13 @@ export default function AddBook() {
 			source,
 		};
 
-		const res = await fetch(apiUrl("/api/books"), {
+				const token = (typeof window !== "undefined" && localStorage.getItem("token")) || "";
+				const res = await fetch(apiUrl("/api/books"), {
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+						...(token ? { Authorization: `Bearer ${token}` } : PUBLIC_ADMIN_KEY ? { Authorization: `Bearer ${PUBLIC_ADMIN_KEY}` } : {}),
+				},
 			body: JSON.stringify(bookBody),
 		});
 		if (!res.ok) {
@@ -64,9 +70,12 @@ export default function AddBook() {
 			if (t.translated_by) {
 				form.append("translated_by", t.translated_by);
 			}
-			const tRes = await fetch(apiUrl(`/api/books/${bookId}/translations`), {
+							const tRes = await fetch(apiUrl(`/api/books/${bookId}/translations`), {
 				method: "POST",
-				body: form,
+						headers: {
+									...(token ? { Authorization: `Bearer ${token}` } : PUBLIC_ADMIN_KEY ? { Authorization: `Bearer ${PUBLIC_ADMIN_KEY}` } : {}),
+						},
+						body: form,
 			});
 			if (!tRes.ok) {
 				console.error(`Translation upload failed: ${tRes.status}`);

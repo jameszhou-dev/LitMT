@@ -31,9 +31,18 @@ export default function ManageBooks() {
 	const [books, setBooks] = useState<Book[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string>("");
+    const [isAdmin, setIsAdmin] = useState(false);
 
 	useEffect(() => {
 		async function load() {
+                // derive admin flag from localStorage for UI hints
+                try {
+                    const raw = localStorage.getItem("user");
+                    if (raw) {
+                        const u = JSON.parse(raw);
+                        setIsAdmin(!!u?.isadmin);
+                    }
+                } catch {}
 			try {
 				const url = apiUrl("/api/books");
 				console.log("Fetching books from:", url);
@@ -58,19 +67,21 @@ export default function ManageBooks() {
 					<h1 style={{ margin: 0 }}>📚 Manage Books</h1>
 					<p style={{ margin: 0, color: "#666" }}>View all books and their translations</p>
 				</div>
-				<Link
-					href="/managebooks/addbook"
-					style={{
-						padding: "10px 16px",
-						backgroundColor: "#2196F3",
-						color: "white",
-						borderRadius: 6,
-						textDecoration: "none",
-						fontWeight: 600,
-					}}
-				>
-					+ Add Book
-				</Link>
+				{isAdmin && (
+					<Link
+						href="/managebooks/addbook"
+						style={{
+							padding: "10px 16px",
+							backgroundColor: "#2196F3",
+							color: "white",
+							borderRadius: 6,
+							textDecoration: "none",
+							fontWeight: 600,
+						}}
+					>
+						+ Add Book
+					</Link>
+				)}
 			</header>
 
 			{loading && <p>Loading...</p>}

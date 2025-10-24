@@ -1,9 +1,10 @@
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request, Depends
 from fastapi.responses import StreamingResponse
 import io
 from bson import ObjectId
 import motor.motor_asyncio
+from users.auth import require_admin
 
 from .models import BookIn, BookOut, TranslatedBookIn, TranslatedBookOut
 
@@ -11,7 +12,7 @@ router = APIRouter()
 
 
 @router.post("/books", response_model=BookOut)
-async def create_book(book: BookIn, request: Request):
+async def create_book(book: BookIn, request: Request, _: bool = Depends(require_admin)):
     db = request.app.state.db
     doc = book.dict()
     translations = doc.pop('translated_books', []) or []
@@ -62,6 +63,7 @@ async def upload_translation(
     file: UploadFile = File(...),
     translated_by: Optional[str] = Form(None),
     request: Request = None,
+    _: bool = Depends(require_admin),
 ):
     db = request.app.state.db
     try:

@@ -71,14 +71,8 @@ export default function Home() {
                 ) : (
                   <div className="flex flex-wrap gap-4 mb-6">
                     <Link
-                      href="/library"
-                      className="px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-lg hover:shadow-xl"
-                    >
-                      Browse Library
-                    </Link>
-                    <Link
                       href="/create-account"
-                      className="px-8 py-4 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition"
+                      className="px-8 py-4 border-2 bg-indigo-600  border-indigo-600 text-white font-semibold rounded-lg  transition"
                     >
                       Create an Account
                     </Link>

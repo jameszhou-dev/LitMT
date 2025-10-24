@@ -17,12 +17,33 @@ interface Book {
 }
 
 export default function Library() {
+  const [authorized, setAuthorized] = useState<null | boolean>(null);
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    // Auth guard: require logged-in user
+    try {
+      const user = localStorage.getItem("user");
+      const isLoggedIn = localStorage.getItem("isLoggedIn");
+      if (!user || isLoggedIn !== "true") {
+        setAuthorized(false);
+        if (typeof window !== "undefined") {
+          window.location.href = "/sign-in";
+        }
+        return;
+      }
+      setAuthorized(true);
+    } catch {
+      setAuthorized(false);
+      if (typeof window !== "undefined") {
+        window.location.href = "/sign-in";
+      }
+      return;
+    }
+
     fetchBooks();
   }, []);
 
@@ -68,6 +89,9 @@ export default function Library() {
               Library
             </h1>
             <div className="w-16 h-1 bg-indigo-600 mb-4"></div>
+            {authorized !== true && (
+              <p className="text-gray-600">Checking permissions…</p>
+            )}
           </div>
         </div>
       </section>
@@ -75,8 +99,12 @@ export default function Library() {
       {/* Content section on solid white to avoid global gradient showing below */}
       <section className="bg-white px-6 pb-12">
         <div className="mx-auto max-w-6xl">
+          {authorized !== true && (
+            <div className="text-center py-12 text-gray-600">Redirecting to sign in…</div>
+          )}
 
           {/* Search Bar */}
+          {authorized === true && (
           <div className="mb-8">
             <input
               type="text"
@@ -86,23 +114,24 @@ export default function Library() {
               className="w-full px-6 py-4 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-lg"
             />
           </div>
+          )}
 
           {/* Error Message */}
-          {error && (
+          {authorized === true && error && (
             <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-700">{error}</p>
             </div>
           )}
 
           {/* Loading State */}
-          {loading && (
+          {authorized === true && loading && (
             <div className="text-center py-12">
               <p className="text-gray-600 text-lg">Loading books...</p>
             </div>
           )}
 
           {/* Empty State */}
-          {!loading && filteredBooks.length === 0 && (
+          {authorized === true && !loading && filteredBooks.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-600 text-lg">
                 {searchQuery
@@ -121,7 +150,7 @@ export default function Library() {
           )}
 
           {/* Books Grid */}
-          {!loading && filteredBooks.length > 0 && (
+          {authorized === true && !loading && filteredBooks.length > 0 && (
             <>
               <p className="text-gray-600 mb-6">
                 Showing {filteredBooks.length} of {books.length} books

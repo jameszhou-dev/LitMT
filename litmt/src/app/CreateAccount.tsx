@@ -75,12 +75,10 @@ export default function CreateAccount() {
         return;
       }
 
-  const user = await response.json();
-
-  // Store user info in localStorage
-  localStorage.setItem("user", JSON.stringify(user));
+  const created = await response.json();
+  // Do not assume token on register; require login to get JWT.
+  localStorage.setItem("user", JSON.stringify(created));
   localStorage.setItem("isLoggedIn", "true");
-  // Notify other components (like Header) immediately
   window.dispatchEvent(new Event("userLoggedIn"));
 
       setSuccess(true);

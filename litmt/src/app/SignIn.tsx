@@ -33,18 +33,23 @@ export default function SignIn() {
         return;
       }
 
-      const user = await response.json();
-      
-      // Store user info in localStorage
+      const payload = await response.json();
+      const user = payload.user || payload; // backward compatibility
+      const token = payload.access_token;
+
+      // Store user info and JWT in localStorage
       localStorage.setItem("user", JSON.stringify(user));
+      if (token) {
+        localStorage.setItem("token", token);
+      }
       localStorage.setItem("isLoggedIn", "true");
       
       // Dispatch custom event to notify Header component
       window.dispatchEvent(new Event("userLoggedIn"));
       
       setSuccess(true);
-      setUsername("");
-      setPassword("");
+  setUsername("");
+  setPassword("");
       
       // Redirect to library after 1.5 seconds
       setTimeout(() => {

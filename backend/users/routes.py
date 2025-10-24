@@ -4,6 +4,7 @@ from datetime import datetime
 from bson import ObjectId
 import bcrypt
 from .models import UserCreate, UserUpdate, UserResponse, User
+from .auth import create_access_token
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -206,9 +207,22 @@ async def login_user(username: str, password: str, request: Request):
             detail="Invalid credentials"
         )
 
-    return {
-        "id": str(user["_id"]),
+    # Issue JWT
+    claims = {
+        "sub": str(user["_id"]),
         "username": user["username"],
         "email": user["email"],
-        "isadmin": user["isadmin"]
+        "isadmin": bool(user.get("isadmin", False)),
+    }
+    token = create_access_token(claims)
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": str(user["_id"]),
+            "username": user["username"],
+            "email": user["email"],
+            "isadmin": user["isadmin"],
+        },
     }
