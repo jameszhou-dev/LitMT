@@ -6,6 +6,7 @@ import motor.motor_asyncio
 import os
 
 from books.routes import router as books_router
+from users.routes import router as users_router
 
 
 load_dotenv()
@@ -46,9 +47,9 @@ app.add_middleware(
 )
 
 app.include_router(books_router, prefix="/api")
+app.include_router(users_router, prefix="/api")
 
 
-# Simple health check for debugging
 @app.get("/health")
 async def health():
     return {"status": "ok"}

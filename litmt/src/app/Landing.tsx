@@ -1,9 +1,39 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "./_components/Header";
 
 export default function Home() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        setIsLoggedIn(true);
+        setUsername(user.username || null);
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen">
+        <Header />
+        <div className="pt-32 pb-24 px-6 flex items-center justify-center">
+          <div className="text-gray-500">Loading...</div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen">
       <Header />
@@ -16,27 +46,50 @@ export default function Home() {
           </div>
           <div className="mx-auto max-w-6xl relative z-10">
             <div className="grid md:grid-cols-3 gap-12 items-center">
-              <div className="md:col-span-2">
-                <h2 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-6 leading-tight">
+                            <div className="md:col-span-2">
+                <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-6 leading-tight">
                   Bringing World Literature Across Language Barriers
-                </h2>
+                </h1>
                 <p className="text-xl text-gray-700 mb-8 leading-relaxed">
                   LitMT makes previously-untranslated literary works accessible to global audiences through machine translation and reader collaboration.
                 </p>
-                <div className="flex flex-wrap gap-4 mb-6">
-                  <Link
-                    href="/managebooks"
-                    className="px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-lg hover:shadow-xl"
-                  >
-                    Explore Books
-                  </Link>
-                  <a
-                    href="#community"
-                    className="px-8 py-4 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition"
-                  >
-                    Suggest a Book
-                  </a>
-                </div>
+                
+                {isLoggedIn ? (
+                  <div className="flex flex-wrap gap-4 mb-6">
+                    <p className="text-lg text-gray-800 font-semibold">
+                      Welcome back, <span className="text-indigo-600">{username}</span>!
+                    </p>
+                    <div className="w-full">
+                      <Link
+                        href="/library"
+                        className="inline-block px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-lg hover:shadow-xl"
+                      >
+                        Go to Library
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-4 mb-6">
+                    <Link
+                      href="/library"
+                      className="px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-lg hover:shadow-xl"
+                    >
+                      Browse Library
+                    </Link>
+                    <Link
+                      href="/create-account"
+                      className="px-8 py-4 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition"
+                    >
+                      Create an Account
+                    </Link>
+                    <Link
+                      href="/sign-in"
+                      className="px-8 py-4 border-2 border-indigo-600 text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition"
+                    >
+                      Sign In
+                    </Link>
+                  </div>
+                )}
                 <p className="text-sm italic text-gray-600">
                   Some features may be incomplete.
                 </p>
