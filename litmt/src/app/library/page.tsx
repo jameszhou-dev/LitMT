@@ -189,10 +189,6 @@ export default function Library() {
                           {book.description}
                         </p>
                       )}
-
-                      <button className="mt-auto px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">
-                        View Translations
-                      </button>
                     </div>
                   </Link>
                   </div>

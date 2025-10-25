@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: litmt-backend
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DB=${MONGO_DB:-litmt}
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPIRES_MIN=${JWT_EXPIRES_MIN:-120}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./litmt
+      dockerfile: Dockerfile.prod
+    container_name: litmt-frontend
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"

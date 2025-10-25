@@ -107,7 +107,7 @@ export default function BookPage() {
               {/* Left: Book meta */}
               <div className="md:col-span-2">
                 <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-3">About this book</h2>
+                  <h2 className="text-xl font-bold text-gray-900 mb-3">Description</h2>
                   {book.description ? (
                     <p className="text-gray-700 leading-relaxed">{book.description}</p>
                   ) : (
@@ -166,7 +166,7 @@ export default function BookPage() {
                 <div className="bg-white border border-gray-200 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Original Source</h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    View the original text of this book. Large texts open in a new tab.
+                    View the original text of this book.
                   </p>
                   <a
                     href={`${BACKEND_URL}/api/books/${book.id}/source`}

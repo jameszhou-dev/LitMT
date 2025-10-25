@@ -148,6 +148,48 @@ docker compose up --build
 - Frontend: http://localhost:3001 (or 3000 if you remap)
 - API: http://localhost:8080
 
+### Using a Managed MongoDB (Production)
+
+1. Provision a managed MongoDB (e.g., MongoDB Atlas)
+
+- Create a cluster and a database user (username/password)
+- Add IP access: allow your deploy platform’s egress IPs (or 0.0.0.0/0 for testing)
+- Copy the connection string (SRV):
+  `mongodb+srv://<user>:<password>@<cluster>.mongodb.net/litmt?retryWrites=true&w=majority`
+
+2. Set environment variables for the backend
+
+- MONGO_URI: the Atlas SRV URI above
+- MONGO_DB: litmt
+- JWT_SECRET: a long random string
+- CORS_ALLOW_ORIGINS: include your frontend URL, e.g., `https://your-frontend-domain`
+
+3. Build production images
+
+```zsh
+docker compose -f docker-compose.prod.yml build
+```
+
+4. Run locally against managed Mongo (optional smoke test)
+
+```zsh
+export MONGO_URI="mongodb+srv://..."
+export CORS_ALLOW_ORIGINS="http://localhost:3000,http://localhost:3001"
+export NEXT_PUBLIC_BACKEND_URL="http://localhost:8080"
+docker compose -f docker-compose.prod.yml up
+```
+
+5. Deploy
+
+- Backend options: Render, Fly.io, Azure Container Apps, AWS ECS/Fargate, etc. Provide container image and set env vars above.
+- Frontend options: Vercel (recommended for Next.js) or any container host using the frontend production image.
+- Ensure CORS_ALLOW_ORIGINS contains your production frontend URL and NEXT_PUBLIC_BACKEND_URL points to your backend URL.
+
+6. Seed data (optional)
+
+- Run a one-off seed script or import using mongodump/mongorestore into Atlas.
+- Example seed script is at `backend/scripts/seed.py` (adjust as needed and run once).
+
 ## Folder Structure (partial)
 
 ```

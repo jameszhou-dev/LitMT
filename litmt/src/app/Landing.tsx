@@ -418,48 +418,8 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-white p-8 rounded-xl text-center">
-              <p className="text-2xl font-serif italic text-gray-900 mb-4">
-                "Thank you for being part of this literary journey"
-              </p>
-              <p className="text-gray-600">
-                Made with ❤️ and curiosity at UMass Amherst
-              </p>
-            </div>
           </div>
         </section>
-
-        {/* FOOTER */}
-        <footer className="bg-gray-900 text-gray-100 py-12 px-6">
-          <div className="mx-auto max-w-6xl">
-            <div className="grid md:grid-cols-3 gap-8 mb-8">
-              <div>
-                <h5 className="font-bold text-white mb-4">Quick Links</h5>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/managebooks" className="hover:text-indigo-400 transition">Explore Books</Link></li>
-                  <li><a href="#research" className="hover:text-indigo-400 transition">Research</a></li>
-                  <li><a href="https://forms.gle/4WFWsU92nze1hSfv8" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition">Suggest a Book</a></li>
-                </ul>
-              </div>
-              <div>
-                <h5 className="font-bold text-white mb-4">Resources</h5>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="https://www.tandfonline.com/doi/full/10.1080/0907676X.2018.1520907" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition">Ethical Translation Paper</a></li>
-                  <li><a href="https://arxiv.org" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition">ArXiv Papers</a></li>
-                  <li><a href="https://cs.umass.edu" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400 transition">UMass CS Department</a></li>
-                </ul>
-              </div>
-              <div>
-                <h5 className="font-bold text-white mb-4">Credits</h5>
-                <p className="text-sm">© 2025 LitMT — Built by UMass NLP Group</p>
-                <p className="text-sm text-gray-400 mt-2">Part of the University of Massachusetts, Amherst research initiative</p>
-              </div>
-            </div>
-            <div className="border-t border-gray-700 pt-8 text-center">
-              <p className="text-sm text-gray-400">Made with ❤️ and curiosity</p>
-            </div>
-          </div>
-        </footer>
       </div>
     </main>
   );

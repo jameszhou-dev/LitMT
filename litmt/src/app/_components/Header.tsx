@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
@@ -159,6 +158,8 @@ export default function Header() {
               {!loading && isLoggedIn && (
                 <>
                   {navLink("/library", "Library")}
+                  {navLink("/reading-list", "Reading List")}
+                  {navLink("/reading-list", "Suggest a Book")}
                   {isAdmin && (
                     <>
                       {navLink("/managebooks", "Manage Books")}
@@ -193,9 +194,23 @@ export default function Header() {
                       aria-haspopup="menu"
                       aria-expanded={menuOpen}
                       onClick={() => setMenuOpen((v) => !v)}
-                      className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                      className="p-1 text-gray-700 hover:text-indigo-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
                     >
-                      <Image src="/profile.svg" alt="Profile" width={20} height={20} />
+                      <span
+                        aria-hidden="true"
+                        className="block w-6 h-6"
+                        style={{
+                          WebkitMaskImage: 'url(/profile.svg)',
+                          maskImage: 'url(/profile.svg)',
+                          WebkitMaskRepeat: 'no-repeat',
+                          maskRepeat: 'no-repeat',
+                          WebkitMaskSize: 'contain',
+                          maskSize: 'contain',
+                          WebkitMaskPosition: 'center',
+                          maskPosition: 'center',
+                          backgroundColor: 'currentColor',
+                        }}
+                      />
                     </button>
                     {menuOpen && (
                       <div role="menu" aria-label="User menu" className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
@@ -262,6 +277,12 @@ export default function Header() {
                   <>
                     <Link href="/library" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
                       Library
+                    </Link>
+                    <Link href="/reading-list" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
+                      Reading List
+                    </Link>
+                    <Link href="/reading-list" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
+                      Suggest a Book
                     </Link>
                     {isAdmin && (
                       <>

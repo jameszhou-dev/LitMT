@@ -16,7 +16,7 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017/litmt
       - MONGO_DB=litmt
-      - CORS_ALLOW_ORIGINS=http://localhost:3000
+      - CORS_ALLOW_ORIGINS=http://localhost:3000,http://localhost:3001
     depends_on:
       - mongo
     ports:
