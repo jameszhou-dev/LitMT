@@ -1,12 +1,4 @@
 services:
-  mongo:
-    image: mongo:6
-    container_name: litmt-mongo
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-
   backend:
     build:
       context: ./backend
@@ -14,11 +6,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - MONGO_URI=mongodb://mongo:27017/litmt
-      - MONGO_DB=litmt
       - CORS_ALLOW_ORIGINS=http://localhost:3000,http://localhost:3001
-    depends_on:
-      - mongo
     ports:
       - "8080:8080"
     volumes:
@@ -42,5 +30,3 @@ services:
       - /usr/src/app/node_modules
     command: sh -c "npm run dev -- -H 0.0.0.0"
 
-volumes:
-  mongo_data:
