@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import AddBook from "../../_components/AddBook";
 import Header from "../../_components/Header";
 
@@ -58,6 +59,11 @@ export default function AddBookPage() {
       {/* Content */}
       <section className="bg-white px-6 pb-16">
         <div className="mx-auto max-w-4xl">
+          <div className="mb-6">
+            <Link href="/managebooks" className="text-indigo-600 font-semibold hover:text-indigo-700">
+              ← Back
+            </Link>
+          </div>
           <AddBook />
         </div>
       </section>

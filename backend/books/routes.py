@@ -6,7 +6,7 @@ from bson import ObjectId
 import motor.motor_asyncio
 from users.auth import require_admin
 
-from .models import BookIn, BookOut, TranslatedBookIn, TranslatedBookOut
+from .models import BookIn, BookOut, TranslatedBookIn, TranslatedBookOut, SourceUploadResponse, BookUpdate
 
 router = APIRouter()
 
@@ -54,6 +54,66 @@ async def create_book(book: BookIn, request: Request, _: bool = Depends(require_
             created_translations.append(TranslatedBookOut(**t_out))
 
     return BookOut(id=str(book_id), translated_books=created_translations, **doc)
+
+
+@router.put("/books/{book_id}", response_model=BookOut)
+async def update_book(book_id: str, payload: BookUpdate, request: Request, _: bool = Depends(require_admin)):
+    db = request.app.state.db
+    try:
+        existing = await db.books.find_one({"_id": ObjectId(book_id)})
+    except Exception:
+        existing = None
+    if not existing:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    updates = {k: v for k, v in payload.dict(exclude_unset=True).items()}
+    if not updates:
+        # No-op update; return current
+        # Also include translations in the response to match BookOut
+        translations = []
+        try:
+            async for tdoc in db.translations.find({'book_id': ObjectId(book_id)}):
+                t_out = {
+                    'id': str(tdoc.get('_id')),
+                    'book_id': str(tdoc.get('book_id')) if tdoc.get('book_id') is not None else '',
+                    'language': tdoc.get('language') or '',
+                    'filename': tdoc.get('filename') or '',
+                    'text': tdoc.get('text'),
+                    'file_id': (str(tdoc.get('file_id')) if tdoc.get('file_id') is not None else None),
+                    'translated_by': tdoc.get('translated_by'),
+                }
+                translations.append(TranslatedBookOut(**t_out))
+        except Exception:
+            pass
+        existing['id'] = str(existing['_id'])
+        existing.pop('_id', None)
+        return BookOut(**existing, translated_books=translations)
+
+    res = await db.books.update_one({"_id": ObjectId(book_id)}, {"$set": updates})
+    if not res.acknowledged:
+        raise HTTPException(status_code=500, detail="Failed to update book")
+
+    # Build response
+    updated = await db.books.find_one({"_id": ObjectId(book_id)})
+    translations = []
+    try:
+        async for tdoc in db.translations.find({'book_id': ObjectId(book_id)}):
+            t_out = {
+                'id': str(tdoc.get('_id')),
+                'book_id': str(tdoc.get('book_id')) if tdoc.get('book_id') is not None else '',
+                'language': tdoc.get('language') or '',
+                'filename': tdoc.get('filename') or '',
+                'text': tdoc.get('text'),
+                'file_id': (str(tdoc.get('file_id')) if tdoc.get('file_id') is not None else None),
+                'translated_by': tdoc.get('translated_by'),
+            }
+            translations.append(TranslatedBookOut(**t_out))
+    except Exception:
+        pass
+
+    updated['id'] = str(updated['_id'])
+    updated.pop('_id', None)
+    return BookOut(**updated, translated_books=translations)
 
 
 @router.post("/books/{book_id}/translations", response_model=TranslatedBookOut)
@@ -154,6 +214,50 @@ async def view_translation_inline(translation_id: str, request: Request):
     return StreamingResponse(io.BytesIO(data), media_type='text/plain')
 
 
+@router.post("/translations/{translation_id}/file", response_model=TranslatedBookOut)
+async def replace_translation_file(
+    translation_id: str,
+    file: UploadFile = File(...),
+    request: Request = None,
+    _: bool = Depends(require_admin),
+):
+    """Replace the file content of an existing translation. Stores the file in GridFS and updates the translation doc."""
+    db = request.app.state.db
+    try:
+        t = await db.translations.find_one({"_id": ObjectId(translation_id)})
+    except Exception:
+        t = None
+    if not t:
+        raise HTTPException(status_code=404, detail="Translation not found")
+
+    content = await file.read()
+    bucket = motor.motor_asyncio.AsyncIOMotorGridFSBucket(db)
+
+    # Remove prior file if it exists
+    old_id = t.get('file_id')
+    if old_id:
+        try:
+            await bucket.delete(ObjectId(old_id))
+        except Exception:
+            # Non-fatal if delete fails
+            pass
+
+    new_file_id = await bucket.upload_from_stream(file.filename, content)
+
+    await db.translations.update_one(
+        {"_id": ObjectId(translation_id)},
+        {"$set": {"file_id": new_file_id, "filename": file.filename}}
+    )
+
+    return TranslatedBookOut(
+        id=translation_id,
+        book_id=str(t.get('book_id')) if t.get('book_id') is not None else '',
+        language=t.get('language') or '',
+        filename=file.filename,
+        file_id=str(new_file_id),
+        translated_by=t.get('translated_by'),
+    )
+
 
 @router.get("/books/{book_id}/source")
 async def view_book_source(book_id: str, request: Request):
@@ -180,6 +284,46 @@ async def view_book_source(book_id: str, request: Request):
     # Otherwise return the source text stored on the document (if any)
     src = b.get('source') or ''
     return StreamingResponse(io.BytesIO(src.encode('utf-8')), media_type='text/plain')
+
+
+@router.post("/books/{book_id}/source", response_model=SourceUploadResponse)
+async def upload_book_source(
+    book_id: str,
+    file: UploadFile = File(...),
+    request: Request = None,
+    _: bool = Depends(require_admin),
+):
+    """Upload or replace the original source as a text file (.txt). Stores the file in GridFS and updates the book doc."""
+    db = request.app.state.db
+    try:
+        b = await db.books.find_one({"_id": ObjectId(book_id)})
+    except Exception:
+        b = None
+    if not b:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    # Read file and store in GridFS
+    content = await file.read()
+    bucket = motor.motor_asyncio.AsyncIOMotorGridFSBucket(db)
+
+    # If an existing source file exists, try to delete it to avoid orphaned files
+    old_id = b.get('source_file_id')
+    if old_id:
+        try:
+            await bucket.delete(ObjectId(old_id))
+        except Exception:
+            # Non-fatal if deletion fails; continue to upload new
+            pass
+
+    new_file_id = await bucket.upload_from_stream(file.filename, content)
+
+    # Update book document with new file id and filename
+    await db.books.update_one(
+        {"_id": ObjectId(book_id)},
+        {"$set": {"source_file_id": new_file_id, "source_filename": file.filename}}
+    )
+
+    return SourceUploadResponse(id=book_id, source_file_id=str(new_file_id), source_filename=file.filename)
 
 
 @router.get("/books", response_model=List[BookOut])
