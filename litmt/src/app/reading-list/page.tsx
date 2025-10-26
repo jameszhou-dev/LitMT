@@ -12,9 +12,10 @@ export default function ReadingListPage() {
   const [activeTab, setActiveTab] = useState<"books" | "comments">("books");
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    // Align with Library guard: allow if localStorage has user and isLoggedIn === "true"
     const user = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    const loggedIn = Boolean(token && user);
+    const isFlag = typeof window !== "undefined" ? localStorage.getItem("isLoggedIn") : null;
+    const loggedIn = Boolean(user && isFlag === "true");
     setIsLoggedIn(loggedIn);
     setLoading(false);
     if (!loggedIn) {
@@ -115,13 +116,6 @@ export default function ReadingListPage() {
               </div>
             </div>
           )}
-
-          {/* Back to Library */}
-          <div className="mt-12 text-center">
-            <Link href="/library" className="text-indigo-600 font-semibold hover:text-indigo-700">
-              ← Back to Library
-            </Link>
-          </div>
         </div>
       </section>
     </main>

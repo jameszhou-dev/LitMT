@@ -162,7 +162,7 @@ export default function Header() {
                   {navLink("/reading-list", "Suggest a Book")}
                   {isAdmin && (
                     <>
-                      {navLink("/managebooks", "Manage Books")}
+                      {navLink("/addbook", "Add Book")}
                     </>
                   )}
                 </>
@@ -216,14 +216,13 @@ export default function Header() {
                         {isAdmin && (
                           <>
                             <Link
-                              href="/managebooks"
+                              href="/addbook"
                               role="menuitem"
                               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
                               onClick={() => setMenuOpen(false)}
                             >
-                              Manage Books
+                              Add Book
                             </Link>
-                          
                             <hr className="my-1" />
                           </>
                         )}
@@ -278,10 +277,9 @@ export default function Header() {
                     </Link>
                     {isAdmin && (
                       <>
-                        <Link href="/managebooks" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
-                          Manage Books
+                        <Link href="/addbook" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
+                          Add Book
                         </Link>
-                      
                       </>
                     )}
                     <button onClick={() => { setMobileOpen(false); setMenuOpen(true); }} className="block px-2 py-2 text-gray-800 hover:text-indigo-700">

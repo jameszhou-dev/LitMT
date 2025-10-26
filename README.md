@@ -43,8 +43,9 @@ LitMT consists of a Next.js frontend and a FastAPI backend backed by MongoDB. Re
    - "View Original" opens the original text at `/api/books/{id}/source`.
 
 4. Admin Controls
-   - Header shows “Manage Books” and “Add Book” if `user.isadmin` is truthy.
-   - Mutating endpoints require a valid admin JWT (server-guarded).
+
+- Header shows “Add Book” if `user.isadmin` is truthy.
+- Mutating endpoints require a valid admin JWT (server-guarded).
 
 ## Frontend
 
@@ -54,8 +55,7 @@ LitMT consists of a Next.js frontend and a FastAPI backend backed by MongoDB. Re
   - `/sign-in`, `/create-account` Authentication pages.
   - `/library` Auth-guarded; redirects to sign-in if unauthenticated.
   - `/book/[id]` Book detail with translations and original source link.
-  - `/managebooks` Admin-only management UI.
-  - `/managebooks/addbook` Admin-only add-book page.
+  - `/addbook` Admin-only add-book page.
 - Header (`src/app/_components/Header.tsx`):
   - Detects login and admin state from `localStorage`.
   - Profile menu with Profile and Logout.
@@ -209,8 +209,7 @@ litmt/
     page.tsx                 # Landing
     library/page.tsx         # Library (auth-guarded)
     book/[id]/page.tsx       # Book detail
-    managebooks/page.tsx     # Admin
-    managebooks/addbook/...  # Admin add
+  addbook/page.tsx         # Admin add
     _components/Header.tsx   # Header with auth/admin links
 ```
 

@@ -28,5 +28,9 @@ services:
     volumes:
       - ./litmt:/usr/src/app
       - /usr/src/app/node_modules
+      - next_cache:/usr/src/app/.next
     command: sh -c "npm run dev -- -H 0.0.0.0"
+
+volumes:
+  next_cache:
 
