@@ -378,3 +378,58 @@ def _safe_id(d: dict):
         return str(d.get('_id'))
     except Exception:
         return "<unknown>"
+
+
+@router.delete("/books/{book_id}")
+async def delete_book(book_id: str, request: Request, _: bool = Depends(require_admin)):
+    """Delete a book and its related resources.
+    - Removes the book document
+    - Removes all translations for the book
+    - Deletes any associated GridFS files (book source_file_id and translation file_id)
+    """
+    db = request.app.state.db
+    # Find the book
+    try:
+        book = await db.books.find_one({"_id": ObjectId(book_id)})
+    except Exception:
+        book = None
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+
+    bucket = motor.motor_asyncio.AsyncIOMotorGridFSBucket(db)
+
+    # Delete book's original source file if present
+    src_id = book.get("source_file_id")
+    if src_id:
+        try:
+            await bucket.delete(ObjectId(src_id))
+        except Exception:
+            # Non-fatal: log and continue
+            pass
+
+    # Collect translations and delete their files
+    try:
+        async for tdoc in db.translations.find({"book_id": ObjectId(book_id)}):
+            fid = tdoc.get("file_id")
+            if fid:
+                try:
+                    await bucket.delete(ObjectId(fid))
+                except Exception:
+                    pass
+    except Exception:
+        # Continue even if listing translations fails
+        pass
+
+    # Remove translation documents
+    try:
+        await db.translations.delete_many({"book_id": ObjectId(book_id)})
+    except Exception:
+        # Non-fatal
+        pass
+
+    # Finally remove the book document
+    res = await db.books.delete_one({"_id": ObjectId(book_id)})
+    if not res.acknowledged:
+        raise HTTPException(status_code=500, detail="Failed to delete book")
+
+    return {"status": "deleted", "id": book_id}

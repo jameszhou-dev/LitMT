@@ -1,6 +1,6 @@
 // @ts-nocheck
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 // Resolve backend URL from environment (.env/.env.local)
 const envBackend = (process.env.NEXT_PUBLIC_BACKEND_URL || "").trim();
@@ -13,6 +13,7 @@ const apiUrl = (path: string) => `${BACKEND_URL}${path.startsWith("/") ? path : 
 const PUBLIC_ADMIN_KEY = (process.env.NEXT_PUBLIC_ADMIN_API_KEY || "").trim();
 
 export default function AddBook() {
+	const sourceInputRef = useRef<HTMLInputElement | null>(null);
 	const [title, setTitle] = useState("");
 	const [author, setAuthor] = useState("");
 	const [year, setYear] = useState("");
@@ -30,6 +31,17 @@ export default function AddBook() {
 		const copy = [...translations];
 		copy[i][field] = value;
 		setTranslations(copy);
+	};
+
+	const openSourcePicker = () => {
+		try { sourceInputRef.current?.click(); } catch {}
+	};
+
+	const openTranslationPicker = (i: number) => {
+		try {
+			const el = document.getElementById(`trans-file-${i}`) as HTMLInputElement | null;
+			el?.click();
+		} catch {}
 	};
 
 	async function handleSubmit(e) {
@@ -77,14 +89,14 @@ export default function AddBook() {
 					console.error(`Source upload failed: ${srcRes.status}`);
 					setStatus(`Failed to upload original source (${srcRes.status})`);
 				} else {
-					setStatus("Uploading translations...");
+					setStatus("Uploading...");
 				}
 			} catch (e) {
 				console.error("Source upload error", e);
 				setStatus("Failed to upload original source");
 			}
 		} else {
-			setStatus("Uploading translations...");
+			setStatus("Uploading...");
 		}
 
 		for (let i = 0; i < translations.length; i++) {
@@ -108,7 +120,6 @@ export default function AddBook() {
 			}
 		}
 
-		setStatus("✅ Book created successfully!");
 		// Reset form
 		setTitle("");
 		setAuthor("");
@@ -187,14 +198,25 @@ export default function AddBook() {
 						<div className="md:col-span-2">
 							<label className="block text-sm font-medium text-gray-700 mb-2">Upload Original Source (.txt)</label>
 							<input
+								ref={sourceInputRef}
+								id="source-file"
 								type="file"
-								accept=".txt"
+								accept=".txt,text/plain"
 								onChange={(e) => setSourceFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
-								className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+								className="hidden"
 							/>
-							{sourceFile && (
-								<p className="text-xs text-gray-600 mt-2">✓ File selected: {sourceFile.name}</p>
-							)}
+							<div className="flex items-center gap-3">
+								<button
+									type="button"
+									onClick={openSourcePicker}
+									className="inline-flex items-center px-3 py-2 border border-indigo-300 bg-indigo-50 text-indigo-700 font-medium rounded-md hover:bg-indigo-100"
+								>
+									Choose file
+								</button>
+								<span className="text-xs text-gray-700 truncate">
+									{sourceFile ? `Selected: ${sourceFile.name}` : "No file chosen"}
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -231,12 +253,24 @@ export default function AddBook() {
 									<div className="md:col-span-2">
 										<label className="block text-sm font-medium text-gray-700 mb-2">Upload Translation File (.txt)</label>
 										<input
+											id={`trans-file-${i}`}
 											type="file"
-											accept=".txt"
-											onChange={(e) => updateTranslation(i, "file", e.target.files[0])}
-											className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+											accept=".txt,text/plain"
+											onChange={(e) => updateTranslation(i, "file", (e.target.files && e.target.files[0]) || null)}
+											className="hidden"
 										/>
-										{t.file && <p className="text-xs text-gray-600 mt-2">✓ File selected: {t.file.name}</p>}
+										<div className="flex items-center gap-3">
+											<button
+												type="button"
+												onClick={() => openTranslationPicker(i)}
+												className="inline-flex items-center px-3 py-2 border border-indigo-300 bg-indigo-50 text-indigo-700 font-medium rounded-md hover:bg-indigo-100"
+											>
+												Choose file
+											</button>
+											<span className="text-xs text-gray-700 truncate">
+												{t.file ? `Selected: ${t.file.name}` : "No file chosen"}
+											</span>
+										</div>
 									</div>
 								</div>
 

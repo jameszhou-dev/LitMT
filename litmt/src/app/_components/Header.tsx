@@ -188,6 +188,28 @@ export default function Header() {
               {!loading && (
                 isLoggedIn ? (
                   <div className="relative" ref={menuRef}>
+                    {/* Notifications icon */}
+                    <Link
+                      href="/notifications"
+                      aria-label="Notifications"
+                      className="p-1 text-gray-700 hover:text-indigo-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded mr-1"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="block w-6 h-6"
+                        style={{
+                          WebkitMaskImage: 'url(/notification.svg)',
+                          maskImage: 'url(/notification.svg)',
+                          WebkitMaskRepeat: 'no-repeat',
+                          maskRepeat: 'no-repeat',
+                          WebkitMaskSize: 'contain',
+                          maskSize: 'contain',
+                          WebkitMaskPosition: 'center',
+                          maskPosition: 'center',
+                          backgroundColor: 'currentColor',
+                        }}
+                      />
+                    </Link>
                     <button
                       aria-label="User menu"
                       aria-haspopup="menu"
@@ -266,6 +288,9 @@ export default function Header() {
               {!loading && (
                 isLoggedIn ? (
                   <>
+                    <Link href="/notifications" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
+                      Notifications
+                    </Link>
                     <Link href="/library" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
                       Library
                     </Link>

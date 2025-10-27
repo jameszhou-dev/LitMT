@@ -51,6 +51,7 @@ export default function BookPage() {
 
   const [translationFiles, setTranslationFiles] = useState<Record<string, File | null>>({});
   const [uploadingTrans, setUploadingTrans] = useState<Record<string, boolean>>({});
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -257,6 +258,35 @@ export default function BookPage() {
     }
   };
 
+  const deleteBook = async () => {
+    if (!book) return;
+    if (!confirm(`Delete "${book.title}"? This will remove the book, its translations, and any stored files. This cannot be undone.`)) {
+      return;
+    }
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) {
+      alert("You must be logged in as admin to delete books.");
+      return;
+    }
+    try {
+      setDeleting(true);
+      const res = await fetch(`${BACKEND_URL}/api/books/${book.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Delete failed (${res.status}): ${txt}`);
+      }
+      // Redirect to library
+      window.location.href = "/library";
+    } catch (e: any) {
+      alert(e?.message || "Failed to delete book");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-white">
       <Header />
@@ -293,12 +323,22 @@ export default function BookPage() {
                   </p>
                 </div>
                 {isAdmin && (
-                  <button
-                    onClick={startEditMeta}
-                    className="mt-1 px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-                  >
-                    Edit details
-                  </button>
+                  <div className="flex items-center gap-2 mt-1">
+                    <button
+                      onClick={startEditMeta}
+                      className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                    >
+                      Edit details
+                    </button>
+                    <button
+                      onClick={deleteBook}
+                      disabled={deleting}
+                      className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-60"
+                      title="Delete this book"
+                    >
+                      {deleting ? "Deleting…" : "Delete book"}
+                    </button>
+                  </div>
                 )}
               </div>
 

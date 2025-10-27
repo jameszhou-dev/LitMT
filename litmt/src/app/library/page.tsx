@@ -460,12 +460,6 @@ export default function Library() {
             </>
           )}
 
-          {/* Back to Home */}
-          <div className="mt-12 text-center">
-            <Link href="/" className="text-indigo-600 font-semibold hover:text-indigo-700">
-              ← Back to Home
-            </Link>
-          </div>
         </div>
       </section>
     </main>
