@@ -22,9 +22,7 @@ export default function AddBook() {
 	const [originalLanguage, setOriginalLanguage] = useState("");
 	const [description, setDescription] = useState("");
 	const [sourceFile, setSourceFile] = useState(null);
-	const [translations, setTranslations] = useState([
-		{ language: "", filename: "", file: null, translated_by: "" },
-	]);
+	const [translations, setTranslations] = useState([]);
 	const [status, setStatus] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
@@ -122,7 +120,7 @@ export default function AddBook() {
 		setDescription("");
 		setOriginalLanguage("");
 		setSourceFile(null);
-		setTranslations([{ language: "", filename: "", file: null, translated_by: "" }]);
+		setTranslations([]);
     setIsUploading(false);
     try { router.push(`/book/${bookId}`); } catch { window.location.href = `/book/${bookId}`; }
 	}
@@ -278,15 +276,13 @@ export default function AddBook() {
 									</div>
 								</div>
 
-								{translations.length > 1 && (
-									<button
-										type="button"
-										onClick={() => removeTranslationRow(i)}
-										className="mt-3 px-3 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
-									>
-										Remove Translation
-									</button>
-								)}
+								<button
+									type="button"
+									onClick={() => removeTranslationRow(i)}
+									className="mt-3 px-3 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
+								>
+									Remove Translation
+								</button>
 							</div>
 						))}
 					</div>

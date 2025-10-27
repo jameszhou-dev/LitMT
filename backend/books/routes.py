@@ -85,8 +85,14 @@ async def update_book(book_id: str, payload: BookUpdate, request: Request, _: bo
                 translations.append(TranslatedBookOut(**t_out))
         except Exception:
             pass
+        # Normalize ObjectId fields for Pydantic
         existing['id'] = str(existing['_id'])
         existing.pop('_id', None)
+        if existing.get('source_file_id') is not None:
+            try:
+                existing['source_file_id'] = str(existing['source_file_id'])
+            except Exception:
+                existing['source_file_id'] = None
         return BookOut(**existing, translated_books=translations)
 
     res = await db.books.update_one({"_id": ObjectId(book_id)}, {"$set": updates})
@@ -111,8 +117,14 @@ async def update_book(book_id: str, payload: BookUpdate, request: Request, _: bo
     except Exception:
         pass
 
+    # Normalize ObjectId fields for Pydantic
     updated['id'] = str(updated['_id'])
     updated.pop('_id', None)
+    if updated.get('source_file_id') is not None:
+        try:
+            updated['source_file_id'] = str(updated['source_file_id'])
+        except Exception:
+            updated['source_file_id'] = None
     return BookOut(**updated, translated_books=translations)
 
 
@@ -336,6 +348,12 @@ async def list_books(limit: int = 50, request: Request = None):
             # Serialize book document
             doc['id'] = str(doc['_id'])
             doc.pop('_id', None)
+            # Normalize ObjectId fields for Pydantic
+            if doc.get('source_file_id') is not None:
+                try:
+                    doc['source_file_id'] = str(doc['source_file_id'])
+                except Exception:
+                    doc['source_file_id'] = None
             # fetch translations for this book
             translations = []
             try:

@@ -79,7 +79,7 @@ export default function SuggestBookPage() {
         throw new Error(data.detail || `Failed to submit suggestion (${res.status})`);
       }
 
-      setSuccess("Thanks! Your suggestion was sent to the admins.");
+      setSuccess("Thanks! Your suggestion was sent to the LitMT team.");
       resetForm();
     } catch (err: any) {
       setError(err?.message || "Something went wrong while submitting your suggestion.");

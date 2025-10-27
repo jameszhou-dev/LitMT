@@ -187,16 +187,16 @@ export default function Header() {
             <div className="hidden md:flex items-center gap-4">
               {!loading && (
                 isLoggedIn ? (
-                  <div className="relative" ref={menuRef}>
-                    {/* Notifications icon */}
+                  <>
+                    {/* Notifications icon to the left of profile */}
                     <Link
                       href="/notifications"
                       aria-label="Notifications"
-                      className="p-1 text-gray-700 hover:text-indigo-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded mr-1"
+                      className="p-1 text-gray-700 hover:text-indigo-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
                     >
                       <span
                         aria-hidden="true"
-                        className="block w-6 h-6"
+                        className="block w-9 h-9"
                         style={{
                           WebkitMaskImage: 'url(/notification.svg)',
                           maskImage: 'url(/notification.svg)',
@@ -210,62 +210,65 @@ export default function Header() {
                         }}
                       />
                     </Link>
-                    <button
-                      aria-label="User menu"
-                      aria-haspopup="menu"
-                      aria-expanded={menuOpen}
-                      onClick={() => setMenuOpen((v) => !v)}
-                      className="p-1 text-gray-700 hover:text-indigo-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="block w-6 h-6"
-                        style={{
-                          WebkitMaskImage: 'url(/profile.svg)',
-                          maskImage: 'url(/profile.svg)',
-                          WebkitMaskRepeat: 'no-repeat',
-                          maskRepeat: 'no-repeat',
-                          WebkitMaskSize: 'contain',
-                          maskSize: 'contain',
-                          WebkitMaskPosition: 'center',
-                          maskPosition: 'center',
-                          backgroundColor: 'currentColor',
-                        }}
-                      />
-                    </button>
-                    {menuOpen && (
-                      <div role="menu" aria-label="User menu" className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-                        {isAdmin && (
-                          <>
-                            <Link
-                              href="/addbook"
-                              role="menuitem"
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-                              onClick={() => setMenuOpen(false)}
-                            >
-                              Add Book
-                            </Link>
-                            <hr className="my-1" />
-                          </>
-                        )}
-                        <Link
-                          href="/profile"
-                          role="menuitem"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          Profile
-                        </Link>
-                        <button
-                          role="menuitem"
-                          onClick={handleLogout}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none"
-                        >
-                          Log out
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                    {/* Profile menu */}
+                    <div className="relative" ref={menuRef}>
+                      <button
+                        aria-label="User menu"
+                        aria-haspopup="menu"
+                        aria-expanded={menuOpen}
+                        onClick={() => setMenuOpen((v) => !v)}
+                        className="p-1 text-gray-700 hover:text-indigo-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="block w-6 h-6"
+                          style={{
+                            WebkitMaskImage: 'url(/profile.svg)',
+                            maskImage: 'url(/profile.svg)',
+                            WebkitMaskRepeat: 'no-repeat',
+                            maskRepeat: 'no-repeat',
+                            WebkitMaskSize: 'contain',
+                            maskSize: 'contain',
+                            WebkitMaskPosition: 'center',
+                            maskPosition: 'center',
+                            backgroundColor: 'currentColor',
+                          }}
+                        />
+                      </button>
+                      {menuOpen && (
+                        <div role="menu" aria-label="User menu" className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
+                          {isAdmin && (
+                            <>
+                              <Link
+                                href="/addbook"
+                                role="menuitem"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                                onClick={() => setMenuOpen(false)}
+                              >
+                                Add Book
+                              </Link>
+                              <hr className="my-1" />
+                            </>
+                          )}
+                          <Link
+                            href="/profile"
+                            role="menuitem"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            Profile
+                          </Link>
+                          <button
+                            role="menuitem"
+                            onClick={handleLogout}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none"
+                          >
+                            Log out
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 ) : (
                   <div className="flex gap-3 items-center">
                     <Link href="/create-account" className={`${linkBase} text-indigo-700 hover:text-indigo-800`}>

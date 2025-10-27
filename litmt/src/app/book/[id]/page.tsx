@@ -5,7 +5,12 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "../../_components/Header";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+// Resolve backend URL consistently with AddBook component
+const envBackend = (process.env.NEXT_PUBLIC_BACKEND_URL || process.env.NEXT_PUBLIC_API_BASE || "").trim();
+const isPlaceholder = /your-backend-domain\.com/i.test(envBackend);
+const rawBackend = envBackend && !isPlaceholder ? envBackend : "http://127.0.0.1:8080";
+const withProtocol = /^https?:\/\//i.test(rawBackend) ? rawBackend : `http://${rawBackend}`;
+const BACKEND_URL = withProtocol.replace(/\/$/, "");
 
 interface Translation {
   id: string;
