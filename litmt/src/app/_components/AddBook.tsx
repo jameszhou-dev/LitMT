@@ -1,6 +1,7 @@
 // @ts-nocheck
 "use client";
 import React, { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 // Resolve backend URL from environment (.env/.env.local)
 const envBackend = (process.env.NEXT_PUBLIC_BACKEND_URL || "").trim();
@@ -14,6 +15,7 @@ const PUBLIC_ADMIN_KEY = (process.env.NEXT_PUBLIC_ADMIN_API_KEY || "").trim();
 
 export default function AddBook() {
 	const sourceInputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
 	const [title, setTitle] = useState("");
 	const [author, setAuthor] = useState("");
 	const [year, setYear] = useState("");
@@ -24,6 +26,7 @@ export default function AddBook() {
 		{ language: "", filename: "", file: null, translated_by: "" },
 	]);
 	const [status, setStatus] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
 	const addTranslationRow = () => setTranslations([...translations, { language: "", filename: "", file: null, translated_by: "" }]);
 	const removeTranslationRow = (i) => setTranslations(translations.filter((_, idx) => idx !== i));
@@ -46,6 +49,7 @@ export default function AddBook() {
 
 	async function handleSubmit(e) {
 		e.preventDefault();
+    setIsUploading(true);
 		setStatus("Creating book...");
 		const bookBody = {
 			title,
@@ -67,60 +71,51 @@ export default function AddBook() {
 		});
 		if (!res.ok) {
 			setStatus(`Failed to create book: ${res.status} ${res.statusText}`);
+      setIsUploading(false);
 			return;
 		}
 		const created = await res.json();
 		const bookId = created.id;
 
-		// If an original source file was selected, upload it now
-		if (sourceFile) {
-			setStatus("Uploading original source...");
-			try {
-				const fd = new FormData();
-				fd.append("file", sourceFile, sourceFile.name || "original.txt");
-				const srcRes = await fetch(apiUrl(`/api/books/${bookId}/source`), {
-					method: "POST",
-					headers: {
-						...(token ? { Authorization: `Bearer ${token}` } : PUBLIC_ADMIN_KEY ? { Authorization: `Bearer ${PUBLIC_ADMIN_KEY}` } : {}),
-					},
-					body: fd,
-				});
-				if (!srcRes.ok) {
-					console.error(`Source upload failed: ${srcRes.status}`);
-					setStatus(`Failed to upload original source (${srcRes.status})`);
-				} else {
-					setStatus("Uploading...");
-				}
-			} catch (e) {
-				console.error("Source upload error", e);
-				setStatus("Failed to upload original source");
-			}
-		} else {
-			setStatus("Uploading...");
-		}
+    // Build uploads and run in parallel to reduce total time
+    const uploads: Promise<Response>[] = [];
+    if (sourceFile) {
+      const fd = new FormData();
+      fd.append("file", sourceFile, sourceFile.name || "original.txt");
+      uploads.push(
+        fetch(apiUrl(`/api/books/${bookId}/source`), {
+          method: "POST",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : PUBLIC_ADMIN_KEY ? { Authorization: `Bearer ${PUBLIC_ADMIN_KEY}` } : {}),
+          },
+          body: fd,
+        })
+      );
+    }
+    translations.forEach((t) => {
+      if (!t.file) return;
+      const form = new FormData();
+      form.append("language", t.language || "");
+      form.append("file", t.file, t.file.name || t.filename || "translation.txt");
+      if (t.translated_by) form.append("translated_by", t.translated_by);
+      uploads.push(
+        fetch(apiUrl(`/api/books/${bookId}/translations`), {
+          method: "POST",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : PUBLIC_ADMIN_KEY ? { Authorization: `Bearer ${PUBLIC_ADMIN_KEY}` } : {}),
+          },
+          body: form,
+        })
+      );
+    });
 
-		for (let i = 0; i < translations.length; i++) {
-			const t = translations[i];
-			if (!t.file) continue;
-			const form = new FormData();
-			form.append("language", t.language || "");
-			form.append("file", t.file, t.file.name || t.filename || "translation.txt");
-			if (t.translated_by) {
-				form.append("translated_by", t.translated_by);
-			}
-							const tRes = await fetch(apiUrl(`/api/books/${bookId}/translations`), {
-				method: "POST",
-						headers: {
-									...(token ? { Authorization: `Bearer ${token}` } : PUBLIC_ADMIN_KEY ? { Authorization: `Bearer ${PUBLIC_ADMIN_KEY}` } : {}),
-						},
-						body: form,
-			});
-			if (!tRes.ok) {
-				console.error(`Translation upload failed: ${tRes.status}`);
-			}
-		}
+    if (uploads.length > 0) {
+      setStatus(`Uploading ${uploads.length} file${uploads.length > 1 ? "s" : ""}...`);
+      await Promise.allSettled(uploads);
+    }
+    setStatus("Finalizing...");
 
-		// Reset form
+		// Reset form and navigate to the new book page
 		setTitle("");
 		setAuthor("");
 		setYear("");
@@ -128,10 +123,19 @@ export default function AddBook() {
 		setOriginalLanguage("");
 		setSourceFile(null);
 		setTranslations([{ language: "", filename: "", file: null, translated_by: "" }]);
+    setIsUploading(false);
+    try { router.push(`/book/${bookId}`); } catch { window.location.href = `/book/${bookId}`; }
 	}
 
 	return (
-		<div className="bg-white border border-gray-200 rounded-xl p-6">
+		<div className="bg-white border border-gray-200 rounded-xl p-6 relative">
+			{isUploading && (
+				<div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90">
+					<div className="animate-spin h-10 w-10 rounded-full border-4 border-indigo-600 border-t-transparent mb-4" />
+					<p className="text-gray-800 font-medium">{status || "Uploading..."}</p>
+					<p className="text-gray-500 text-sm mt-1">Large text files can take a while. You can keep this tab open.</p>
+				</div>
+			)}
 			<form onSubmit={handleSubmit} className="space-y-8">
 				{/* Book Information */}
 				<div>
