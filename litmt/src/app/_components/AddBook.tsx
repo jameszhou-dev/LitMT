@@ -18,7 +18,7 @@ export default function AddBook() {
 	const [year, setYear] = useState("");
 	const [originalLanguage, setOriginalLanguage] = useState("");
 	const [description, setDescription] = useState("");
-	const [source, setSource] = useState("");
+	const [sourceFile, setSourceFile] = useState(null);
 	const [translations, setTranslations] = useState([
 		{ language: "", filename: "", file: null, translated_by: "" },
 	]);
@@ -41,7 +41,7 @@ export default function AddBook() {
 			year: year ? parseInt(year, 10) : undefined,
 			description,
 			original_language: originalLanguage || undefined,
-			source,
+			// prefer uploading original source as a file after creation
 		};
 
 				const token = (typeof window !== "undefined" && localStorage.getItem("token")) || "";
@@ -59,7 +59,33 @@ export default function AddBook() {
 		}
 		const created = await res.json();
 		const bookId = created.id;
-		setStatus("Uploading translations...");
+
+		// If an original source file was selected, upload it now
+		if (sourceFile) {
+			setStatus("Uploading original source...");
+			try {
+				const fd = new FormData();
+				fd.append("file", sourceFile, sourceFile.name || "original.txt");
+				const srcRes = await fetch(apiUrl(`/api/books/${bookId}/source`), {
+					method: "POST",
+					headers: {
+						...(token ? { Authorization: `Bearer ${token}` } : PUBLIC_ADMIN_KEY ? { Authorization: `Bearer ${PUBLIC_ADMIN_KEY}` } : {}),
+					},
+					body: fd,
+				});
+				if (!srcRes.ok) {
+					console.error(`Source upload failed: ${srcRes.status}`);
+					setStatus(`Failed to upload original source (${srcRes.status})`);
+				} else {
+					setStatus("Uploading translations...");
+				}
+			} catch (e) {
+				console.error("Source upload error", e);
+				setStatus("Failed to upload original source");
+			}
+		} else {
+			setStatus("Uploading translations...");
+		}
 
 		for (let i = 0; i < translations.length; i++) {
 			const t = translations[i];
@@ -89,14 +115,12 @@ export default function AddBook() {
 		setYear("");
 		setDescription("");
 		setOriginalLanguage("");
-		setSource("");
+		setSourceFile(null);
 		setTranslations([{ language: "", filename: "", file: null, translated_by: "" }]);
 	}
 
 	return (
 		<div className="bg-white border border-gray-200 rounded-xl p-6">
-			<p className="text-gray-600 mb-6">Create a new book and upload translations</p>
-
 			<form onSubmit={handleSubmit} className="space-y-8">
 				{/* Book Information */}
 				<div>
@@ -161,14 +185,16 @@ export default function AddBook() {
 						</div>
 
 						<div className="md:col-span-2">
-							<label className="block text-sm font-medium text-gray-700 mb-2">Original Source Text</label>
-							<textarea
-								value={source}
-								onChange={(e) => setSource(e.target.value)}
-								placeholder="Paste the original text or provide a reference"
-								rows={4}
-								className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200 font-mono"
+							<label className="block text-sm font-medium text-gray-700 mb-2">Upload Original Source (.txt)</label>
+							<input
+								type="file"
+								accept=".txt"
+								onChange={(e) => setSourceFile(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
+								className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
 							/>
+							{sourceFile && (
+								<p className="text-xs text-gray-600 mt-2">✓ File selected: {sourceFile.name}</p>
+							)}
 						</div>
 					</div>
 				</div>

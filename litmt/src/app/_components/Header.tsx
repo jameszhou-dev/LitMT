@@ -159,7 +159,7 @@ export default function Header() {
                 <>
                   {navLink("/library", "Library")}
                   {navLink("/reading-list", "Reading List")}
-                  {navLink("/reading-list", "Suggest a Book")}
+                  {navLink("/suggest-book", "Suggest a Book")}
                   {isAdmin && (
                     <>
                       {navLink("/addbook", "Add Book")}
@@ -272,7 +272,7 @@ export default function Header() {
                     <Link href="/reading-list" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
                       Reading List
                     </Link>
-                    <Link href="/reading-list" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
+                    <Link href="/suggest-book" className="block px-2 py-2 text-gray-800 hover:text-indigo-700" onClick={() => setMobileOpen(false)}>
                       Suggest a Book
                     </Link>
                     {isAdmin && (

@@ -7,6 +7,7 @@ import os
 
 from books.routes import router as books_router
 from users.routes import router as users_router
+from suggestions.routes import router as suggestions_router
 
 
 load_dotenv()
@@ -50,6 +51,7 @@ app.add_middleware(
 
 app.include_router(books_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
+app.include_router(suggestions_router, prefix="/api")
 
 
 @app.get("/health")

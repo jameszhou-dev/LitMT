@@ -91,12 +91,21 @@ Environment (backend)
   - `translated_books: Translation[]`
 
 - Translation
+
   - `id` (string)
   - `book_id` (string)
   - `language` (string)
   - `filename?`, `file_id?` (GridFS)
   - `text?` (optional inline text)
   - `translated_by?` (model name or translator)
+
+- SuggestedBook
+  - `id` (string)
+  - `title`, `author?`, `original_language?`, `description?`
+  - `submitter_id?`, `submitter_username?`, `created_at` (ISO)
+  - `notify_admins` (bool, default true)
+  - `needs_review` (bool, default true)
+  - `acknowledged` (bool), `acknowledged_by?`, `acknowledged_at?`
 
 ### API Endpoints (selected)
 
@@ -112,12 +121,19 @@ Prefix: `/api`
   - `DELETE /users/{user_id}` → delete user
 
 - Books and Translations (`backend/books/routes.py`)
+
   - `GET /books` → list books with embedded translations
   - `POST /books` (admin JWT) → create a book (can include initial translations)
   - `POST /books/{book_id}/translations` (admin JWT, multipart) → upload a translation file (`language`, `file`, optional `translated_by`)
   - `GET /translations/{translation_id}/view` → text/plain inline view of translation
   - `GET /translations/{translation_id}/file` → download translation file
   - `GET /books/{book_id}/source` → view original source (inline text or GridFS file)
+
+- Suggestions (`backend/suggestions/routes.py`)
+  - `POST /suggestions` (auth required) → create a suggested book; sets `notify_admins=true`, `needs_review=true`
+  - `GET /suggestions?only_needing_review=true|false` (admin) → list suggestions; filter to those needing review
+  - `GET /suggestions/mine` (auth required) → list suggestions created by current user
+  - `PUT /suggestions/{id}/acknowledge` (admin) → mark suggestion acknowledged; clears `needs_review` and `notify_admins`
 
 ### Auth
 
