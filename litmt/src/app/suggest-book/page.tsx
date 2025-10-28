@@ -77,7 +77,7 @@ export default function SuggestBookPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.detail || `Failed to submit suggestion (${res.status})`);
-      }
+      } 
 
       setSuccess("Thanks! Your suggestion was sent to the LitMT team.");
       resetForm();
