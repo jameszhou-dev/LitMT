@@ -73,7 +73,7 @@ Environment (backend)
 - `JWT_ALGORITHM` (default `HS256`)
 - `JWT_EXPIRES_MIN` (token lifetime in minutes)
 
-### Data Models (simplified)
+### Data Models
 
 - Book
 
@@ -100,7 +100,7 @@ Environment (backend)
   - `needs_review` (bool, default true)
   - `acknowledged` (bool), `acknowledged_by?`, `acknowledged_at?`
 
-### API Endpoints (selected)
+### API Endpoints
 
 Prefix: `/api`
 
